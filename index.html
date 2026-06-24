@@ -49,6 +49,7 @@
       <div class="control-group recording-controls">
         <button id="cameraBtn" type="button">카메라 켜기</button>
         <button id="recordBtn" type="button" class="record" disabled>녹화 시작</button>
+        <button id="performanceModeBtn" type="button" class="performance-mode-button" disabled>연주 모드</button>
       </div>
     </section>
 
@@ -69,6 +70,16 @@
       </div>
       <video id="cameraPreview" autoplay playsinline muted></video>
     </aside>
+
+    <section class="performance-controls" id="performanceControls" aria-label="Performance mode controls">
+      <button id="performanceExitBtn" type="button">나가기</button>
+      <button id="performancePrevBtn" type="button" disabled>◀</button>
+      <span id="performancePageText" class="performance-page-text">0 / 0</span>
+      <button id="performanceNextBtn" type="button" disabled>▶</button>
+      <button id="performanceScrollSlowerBtn" type="button">스크롤 -</button>
+      <button id="performanceScrollFasterBtn" type="button">스크롤 +</button>
+      <button id="performanceRecordBtn" type="button" class="record" disabled>녹화 시작</button>
+    </section>
 
     <section class="result-panel" id="resultPanel" hidden>
       <div class="result-header">

@@ -19,6 +19,15 @@ const els = {
   scrollSpeedText: document.getElementById('scrollSpeedText'),
   cameraBtn: document.getElementById('cameraBtn'),
   recordBtn: document.getElementById('recordBtn'),
+  performanceModeBtn: document.getElementById('performanceModeBtn'),
+  performanceControls: document.getElementById('performanceControls'),
+  performanceExitBtn: document.getElementById('performanceExitBtn'),
+  performancePrevBtn: document.getElementById('performancePrevBtn'),
+  performanceNextBtn: document.getElementById('performanceNextBtn'),
+  performancePageText: document.getElementById('performancePageText'),
+  performanceScrollSlowerBtn: document.getElementById('performanceScrollSlowerBtn'),
+  performanceScrollFasterBtn: document.getElementById('performanceScrollFasterBtn'),
+  performanceRecordBtn: document.getElementById('performanceRecordBtn'),
   cameraPanel: document.getElementById('cameraPanel'),
   cameraPreview: document.getElementById('cameraPreview'),
   cameraLabel: document.getElementById('cameraLabel'),
@@ -45,6 +54,7 @@ const state = {
   lastVideoUrl: null,
   scrollRAF: null,
   lastScrollTime: null,
+  performanceMode: false,
 };
 
 function setStatus(message) {
@@ -52,9 +62,43 @@ function setStatus(message) {
 }
 
 function enablePdfControls(enabled) {
-  [els.prevBtn, els.nextBtn, els.pageInput, els.zoomOutBtn, els.zoomInBtn, els.fitBtn].forEach((el) => {
+  [els.prevBtn, els.nextBtn, els.pageInput, els.zoomOutBtn, els.zoomInBtn, els.fitBtn, els.performanceModeBtn].forEach((el) => {
     el.disabled = !enabled;
   });
+  updatePerformanceUi();
+}
+
+function updatePerformanceUi() {
+  const hasPdf = Boolean(state.pdfDoc);
+  const isRecording = state.recorder?.state === 'recording';
+  const currentPage = hasPdf ? state.pageNum : 0;
+  const totalPages = hasPdf ? state.pdfDoc.numPages : 0;
+
+  els.performancePrevBtn.disabled = !hasPdf || currentPage <= 1;
+  els.performanceNextBtn.disabled = !hasPdf || currentPage >= totalPages;
+  els.performanceRecordBtn.disabled = !state.stream;
+  els.performancePageText.textContent = `${currentPage} / ${totalPages}`;
+
+  els.performanceRecordBtn.textContent = isRecording ? '녹화 정지' : '녹화 시작';
+  els.performanceRecordBtn.classList.toggle('is-recording', isRecording);
+}
+
+async function enterPerformanceMode() {
+  if (!state.pdfDoc) return;
+  state.performanceMode = true;
+  document.body.classList.add('performance-mode');
+  setStatus('연주 모드');
+  updatePerformanceUi();
+
+  await fitWidth();
+  els.viewerWrap.scrollTop = 0;
+}
+
+function exitPerformanceMode() {
+  state.performanceMode = false;
+  document.body.classList.remove('performance-mode');
+  setStatus(state.pdfDoc ? `${state.fileName} · ${state.pdfDoc.numPages}페이지` : 'PDF를 불러오세요');
+  updatePerformanceUi();
 }
 
 function getSafeFileStem(name) {
@@ -102,6 +146,7 @@ async function renderPage(num) {
   els.pageInput.value = String(num);
   els.prevBtn.disabled = num <= 1;
   els.nextBtn.disabled = num >= state.pdfDoc.numPages;
+  updatePerformanceUi();
 
   if (state.pendingPageNum !== null) {
     const pending = state.pendingPageNum;
@@ -165,6 +210,7 @@ async function startCamera() {
     els.cameraBtn.textContent = '카메라 끄기';
     els.recordBtn.disabled = false;
     els.cameraLabel.textContent = '카메라 준비됨';
+    updatePerformanceUi();
     setStatus('카메라 준비 완료');
   } catch (error) {
     console.error(error);
@@ -183,6 +229,7 @@ function stopCamera() {
   els.cameraBtn.textContent = '카메라 켜기';
   els.recordBtn.disabled = true;
   els.cameraLabel.textContent = '카메라 미리보기';
+  updatePerformanceUi();
   els.recordingDot.classList.remove('is-live');
   setStatus('카메라 꺼짐');
 }
@@ -235,6 +282,7 @@ function startRecording() {
 
     els.recordBtn.textContent = '녹화 시작';
     els.recordBtn.classList.remove('is-recording');
+    updatePerformanceUi();
     els.recordingDot.classList.remove('is-live');
     els.cameraLabel.textContent = '카메라 준비됨';
     setStatus('녹화 완료');
@@ -243,6 +291,7 @@ function startRecording() {
   state.recorder.start(1000);
   els.recordBtn.textContent = '녹화 정지';
   els.recordBtn.classList.add('is-recording');
+  updatePerformanceUi();
   els.recordingDot.classList.add('is-live');
   els.cameraLabel.textContent = '녹화 중';
   setStatus('녹화 중...');
@@ -276,6 +325,16 @@ function updateAutoScroll() {
   }
 }
 
+
+function adjustAutoScroll(delta) {
+  const current = Number(els.scrollSpeed.value);
+  const min = Number(els.scrollSpeed.min);
+  const max = Number(els.scrollSpeed.max);
+  const next = Math.min(Math.max(current + delta, min), max);
+  els.scrollSpeed.value = String(next);
+  updateAutoScroll();
+}
+
 els.pdfInput.addEventListener('change', (event) => loadPdf(event.target.files[0]).catch((error) => {
   console.error(error);
   setStatus('PDF 불러오기 실패');
@@ -287,6 +346,15 @@ els.nextBtn.addEventListener('click', () => changePage(1));
 els.zoomOutBtn.addEventListener('click', () => changeZoom(-0.15));
 els.zoomInBtn.addEventListener('click', () => changeZoom(0.15));
 els.fitBtn.addEventListener('click', fitWidth);
+els.performanceModeBtn.addEventListener('click', () => enterPerformanceMode().catch((error) => {
+  console.error(error);
+  alert(`연주 모드로 전환하지 못했습니다.\n\n${error.message}`);
+}));
+els.performanceExitBtn.addEventListener('click', exitPerformanceMode);
+els.performancePrevBtn.addEventListener('click', () => changePage(-1));
+els.performanceNextBtn.addEventListener('click', () => changePage(1));
+els.performanceScrollSlowerBtn.addEventListener('click', () => adjustAutoScroll(-5));
+els.performanceScrollFasterBtn.addEventListener('click', () => adjustAutoScroll(5));
 
 els.pageInput.addEventListener('change', () => {
   if (!state.pdfDoc) return;
@@ -300,6 +368,11 @@ els.cameraBtn.addEventListener('click', () => {
 });
 
 els.recordBtn.addEventListener('click', () => {
+  if (state.recorder?.state === 'recording') stopRecording();
+  else startRecording();
+});
+
+els.performanceRecordBtn.addEventListener('click', () => {
   if (state.recorder?.state === 'recording') stopRecording();
   else startRecording();
 });
@@ -318,6 +391,16 @@ els.openVideoBtn.addEventListener('click', () => {
 });
 
 els.scrollSpeed.addEventListener('input', updateAutoScroll);
+
+window.addEventListener('keydown', (event) => {
+  if (!state.performanceMode || event.target instanceof HTMLInputElement) return;
+  if (event.key === 'Escape') exitPerformanceMode();
+  if (event.key === 'ArrowLeft') changePage(-1);
+  if (event.key === 'ArrowRight' || event.key === ' ') {
+    event.preventDefault();
+    changePage(1);
+  }
+});
 
 window.addEventListener('beforeunload', () => {
   stopCamera();

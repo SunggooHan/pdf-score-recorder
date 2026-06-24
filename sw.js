@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-score-recorder-mvp-v1';
+const CACHE_NAME = 'pdf-score-recorder-mvp-v2';
 const CORE_ASSETS = [
   './',
   './index.html',

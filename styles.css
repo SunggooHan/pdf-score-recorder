@@ -301,3 +301,111 @@ button:hover:not(:disabled), .file-button:hover, .download:hover {
     width: min(250px, calc(100vw - 28px));
   }
 }
+
+.performance-mode-button {
+  border-color: rgba(255,255,255,0.28);
+  background: #374151;
+}
+
+.performance-controls {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 35;
+  width: min(920px, calc(100vw - 24px));
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(17, 24, 39, 0.92);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.performance-page-text {
+  min-width: 72px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+body.performance-mode {
+  background: #020617;
+  overflow: hidden;
+}
+
+body.performance-mode .topbar,
+body.performance-mode .toolbar {
+  display: none;
+}
+
+body.performance-mode .app-shell {
+  min-height: 100dvh;
+  display: block;
+}
+
+body.performance-mode .viewer-wrap {
+  height: 100dvh;
+  padding: 12px 8px 104px;
+  scroll-padding-bottom: 104px;
+}
+
+body.performance-mode #pdfCanvas {
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+}
+
+body.performance-mode .camera-panel {
+  right: 10px;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  width: min(210px, 42vw);
+  border-radius: 14px;
+  opacity: 0.92;
+}
+
+body.performance-mode .camera-header {
+  height: 34px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+body.performance-mode .camera-header button {
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+body.performance-mode .performance-controls {
+  display: flex;
+}
+
+body.performance-mode .result-panel {
+  right: 10px;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 720px) {
+  .performance-controls {
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .performance-controls button {
+    padding: 9px 10px;
+  }
+
+  .performance-page-text {
+    min-width: 62px;
+  }
+
+  body.performance-mode .viewer-wrap {
+    padding-bottom: 112px;
+  }
+
+  body.performance-mode .camera-panel {
+    width: min(170px, 44vw);
+  }
+}
